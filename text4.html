@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kakoulima - Gestion intelligente des déchets</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- IntlTelInput CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Styles pour le champ téléphone international */
+        .iti {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .iti__flag {
+            background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/img/flags.png");
+        }
+
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .iti__flag {
+                background-image: url("https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/img/flags@2x.png");
+            }
+        }
+
+        .iti__country-list {
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            border: none;
+            max-width: 350px;
+        }
+
+        .iti__country {
+            padding: 8px 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        .iti__country:hover {
+            background-color: var(--light-bg);
+        }
+
+        .iti__country.iti__highlight {
+            background-color: var(--light-bg);
+        }
+
+        .iti__selected-flag {
+            border-radius: 8px 0 0 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .iti__selected-flag:hover {
+            background-color: rgba(13, 61, 128, 0.05);
+        }
+
+        .iti__arrow {
+            border-top-color: var(--primary-color);
+        }
+
+        .iti__arrow--up {
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Style pour le champ de téléphone */
+        #phone-login, #phone-register {
+            padding-left: 90px !important;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        #phone-login:focus, #phone-register:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(13, 61, 128, 0.25);
+        }
+
+        /* Message de validation */
+        .phone-valid {
+            color: #28a745;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .phone-invalid {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Animation du drapeau */
+        .iti__flag-container {
+            transition: all 0.3s ease;
+        }
+
+        .iti--allow-dropdown .iti__flag-container:hover .iti__selected-flag {
+            background-color: rgba(13, 61, 128, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Desktop -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Kakoulima<span>.</span></a>
+            <div class="ms-auto d-flex align-items-center">
+                <button class="btn login-btn d-lg-none me-2" onclick="openLoginModal()">
+                    <i class="bi bi-person"></i>
+                </button>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#accueil">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pme">PME</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#communes">Communes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#faq">FAQ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link login-btn" href="#" onclick="openLoginModal()">
+                            <i class="bi bi-person"></i> Connexion
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Bottom Bar pour mobile - Fixée en bas -->
+    <div class="bottom-bar">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-2 nav-item">
+                    <a class="nav-link active" href="#accueil">
+                        <i class="bi bi-house-door"></i>
+                        <span>Accueil</span>
+                    </a>
+                </div>
+                <div class="col-2 nav-item">
+                    <a class="nav-link" href="#pme">
+                        <i class="bi bi-building"></i>
+                        <span>PME</span>
+                    </a>
+                </div>
+                <div class="col-2 nav-item">
+                    <a class="nav-link" href="#communes">
+                        <i class="bi bi-map"></i>
+                        <span>Communes</span>
+                    </a>
+                </div>
+                <div class="col-2 nav-item">
+                    <a class="nav-link" href="#faq">
+                        <i class="bi bi-question-circle"></i>
+                        <span>FAQ</span>
+                    </a>
+                </div>
+                <div class="col-2 nav-item">
+                    <a class="nav-link" href="#" onclick="openLoginModal()">
+                        <i class="bi bi-person"></i>
+                        <span>Compte</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="accueil" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <h1 class="hero-title">Ensemble pour une ville plus propre</h1>
+                    <p class="hero-subtitle">Kakoulima révolutionne la gestion des déchets avec des solutions innovantes et participatives.</p>
+                    <button class="btn signal-btn" style="width: auto;" onclick="openSignalModal()">
+                        <i class="bi bi-exclamation-triangle"></i> Signaler un point noir
+                    </button>
+                </div>
+                <div class="col-lg-6" data-aos="fade-left" style="padding-top:20px";>
+                    <div class="signal-card">
+                        <h3 class="mb-4">Signaler rapidement</h3>
+                        <form id="signalForm">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" placeholder="Votre nom" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="email" class="form-control" placeholder="Votre email" required>
+                            </div>
+                            <div class="mb-3">
+                                <select class="form-select" required>
+                                    <option value="">Sélectionnez un secteur</option>
+                                    <option value="ZTT">ZTT</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <textarea class="form-control" rows="3" placeholder="Description du point noir" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Photo (optionnel)</label>
+                                <input type="file" class="form-control" accept="image/*">
+                            </div>
+                            <button type="submit" class="btn signal-btn">
+                                <i class="bi bi-send"></i> Envoyer le signalement
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5" data-aos="fade-up">Nos fonctionnalités principales</h2>
+            <div class="row g-4">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <h4>Signalement géolocalisé</h4>
+                        <p>Identifiez et signalez les points noirs en temps réel avec géolocalisation précise.</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                        <h4>Suivi des collectes</h4>
+                        <p>Visualisez le parcours des camions et suivez l'état d'avancement des collectes.</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                        <h4>Statistiques en direct</h4>
+                        <p>Accédez aux données de collecte et à l'impact environnemental de vos actions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PME Section -->
+    <section id="pme" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5" data-aos="fade-up">PME PARTENAIRE PAR SECTEUR</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4" data-aos="flip-left" data-aos-delay="100">
+                    <div class="pme-card">
+                        <div class="pme-header">
+                            <h5 class="mb-0"><i class="bi bi-building"></i> Secteur Ramassage</h5>
+                        </div>
+                        <div class="pme-body">
+                            <h6>Ecosense Solutions</h6>
+                            <div class="pme-contact">
+                                <i class="bi bi-telephone"></i>
+                                <span>+224 625 71 84 67</span>
+                            </div>
+                            <div class="pme-contact">
+                                <i class="bi bi-envelope"></i>
+                                <span>ecosense@gmail.com</span>
+                            </div>
+                            <div class="pme-contact">
+                                <i class="bi bi-clock"></i>
+                                <span>Lun-Sam: 7h-18h</span>
+                            </div>
+                            <hr>
+                            <h6>RATOMA ,CONAKRY</h6>
+                            <div class="pme-contact">
+                                <i class="bi bi-telephone"></i>
+                                <span>+224 624 74 54 61</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4" data-aos="flip-left" data-aos-delay="200">
+                    <div class="pme-card">
+                        <div class="pme-header">
+                            <h5 class="mb-0"><i class="bi bi-building"></i> Secteur Environnement Propre & Prestation</h5>
+                        </div>
+                        <div class="pme-body">
+                            <h6>EPP Services</h6>
+                            <div class="pme-contact">
+                                <i class="bi bi-telephone"></i>
+                                <span>+224 624 74 54 61</span>
+                            </div>
+                            <div class="pme-contact">
+                                <i class="bi bi-envelope"></i>
+                                <span>EPPservice@gmail.com</span>
+                            </div>
+                             <div class="pme-contact">
+                                <i class="bi bi-clock"></i>
+                                <span>Lun-Sam: 7h-18h</span>
+                            </div>
+                            <hr>
+                            <h6>Kipe Dadia</h6>
+                            <div class="pme-contact">
+                                <i class="bi bi-telephone"></i>
+                                <span>+224 624 74 54 61</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4" data-aos="flip-left" data-aos-delay="300">
+                    <div class="pme-card">
+                        <div class="pme-header">
+                            <h5 class="mb-0"><i class="bi bi-building"></i> Secteur Ramassage</h5>
+                        </div>
+                        <div class="pme-body">
+                            <h6>NECAR GUINEE</h6>
+                            <div class="pme-contact">
+                                <i class="bi bi-telephone"></i>
+                                <span>+224 623 65 20 74</span>
+                            </div>
+                            <div class="pme-contact">
+                                <i class="bi bi-envelope"></i>
+                                <span>necar@gmail.com</span>
+                            </div>
+                             <div class="pme-contact">
+                                <i class="bi bi-clock"></i>
+                                <span>Lun-Sam: 7h-18h</span>
+                            </div>
+                            <hr>
+                            <h6>MORIFODIEAH</h6>
+                            <div class="pme-contact">
+                                <i class="bi bi-telephone"></i>
+                                <span>+224 623 65 20 74</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Codification des communes -->
+    <section id="communes" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5" data-aos="fade-up">Codification des communes</h2>
+            <div class="codif-grid" data-aos="zoom-in">
+                <div class="codif-item">
+                    <div class="codif-code">RAT-01</div>
+                    <div class="codif-commune">RAT</div>
+                </div>
+                <div class="codif-item">
+                    <div class="codif-code">MAT-02</div>
+                    <div class="codif-commune">MAT</div>
+                </div>
+                <div class="codif-item">
+                    <div class="codif-code">KAL-03</div>
+                    <div class="codif-commune">KAL</div>
+                </div>
+                <div class="codif-item">
+                    <div class="codif-code">TOM-04</div>
+                    <div class="codif-commune">TOM</div>
+                </div>
+                <div class="codif-item">
+                    <div class="codif-code">SONF-05</div>
+                    <div class="codif-commune">SON</div>
+                </div>
+                <div class="codif-item">
+                    <div class="codif-code">KGB-06</div>
+                    <div class="codif-commune">KGB</div>
+                </div>
+                <div class="codif-item">
+                    <div class="codif-code">Lam-07</div>
+                    <div class="codif-commune">LAM</div>
+                </div>
+                <div class="codif-item">
+                    <div class="codif-code">COY-08</div>
+                    <div class="codif-commune">COY 2</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Programme des tournées -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5" data-aos="fade-up">Programme des tournées</h2>
+            <div class="row">
+                <div class="col-md-6" data-aos="fade-right">
+                    <div class="tournee-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-calendar-check" style="color: var(--primary-color);"></i> Lundi</h5>
+                            <span class="badge" style="background: var(--primary-color) !important;">RATOMA, RAT</span>
+                        </div>
+                        <p class="mb-0 mt-2"><i class="bi bi-clock" style="color: var(--primary-color);"></i> 7h00 - 15h00</p>
+                    </div>
+                    <div class="tournee-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-calendar-check" style="color: var(--primary-color);"></i> Mardi</h5>
+                            <span class="badge" style="background: var(--primary-color) !important;">KALOUM, KAL</span>
+                        </div>
+                        <p class="mb-0 mt-2"><i class="bi bi-clock"></i> 8h00 - 16h00</p>
+                    </div>
+                    <div class="tournee-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-calendar-check" style="color: var(--primary-color);"></i> Mercredi</h5>
+                            <span class="badge" style="background: var(--primary-color) !important;">MATOTO, MAT</span>
+                        </div>
+                        <p class="mb-0 mt-2"><i class="bi bi-clock" style="color: var(--primary-color)"></i> 7h30 - 15h30</p>
+                    </div>
+                </div>
+                <div class="col-md-6" data-aos="fade-left">
+                    <div class="tournee-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-calendar-check" style="color: var(--primary-color);"></i> Jeudi</h5>
+                            <span class="badge" style="background: var(--primary-color) !important;">SONFONIA, SONF 2</span>
+                        </div>
+                        <p class="mb-0 mt-2"><i class="bi bi-clock" style="color: var(--primary-color);"></i> 8h00 - 16h00</p>
+                    </div>
+                    <div class="tournee-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-calendar-check" style="color: var(--primary-color);"></i> Vendredi</h5>
+                            <span class="badge" style="background: var(--primary-color)!important;">Tous secteurs</span>
+                        </div>
+                        <p class="mb-0 mt-2"><i class="bi bi-clock" style="color: var(--primary-color);"></i> 7h00 - 17h00</p>
+                    </div>
+                    <div class="tournee-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5><i class="bi bi-calendar-check" style="color: var(--primary-color);"></i> Samedi</h5>
+                            <span class="badge" style="background: var(--primary-color)!important;">Marchés</span>
+                        </div>
+                        <p class="mb-0 mt-2"><i class="bi bi-clock" style="color: var(--primary-color);"></i> 6h00 - 12h00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="container py-5">
+        <div class="newsletter-section" data-aos="flip-up">
+            <div class="row justify-content-center">
+                <div class="col-md-8 text-center">
+                    <h2 class="mb-4">Restez informé</h2>
+                    <p class="mb-4">Recevez nos actualités et les programmes de collecte directement dans votre boîte mail</p>
+                    <form id="newsletterForm" class="row g-3 justify-content-center">
+                        <div class="col-md-8">
+                            <input type="email" class="newsletter-input" placeholder="Votre adresse email" required>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="newsletter-btn" style="background: #FF9800;">
+                                <i class="bi bi-envelope-paper"></i> S'abonner
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-4">
+                        <span class="badge bg-light text-dark me-2">Publications hebdo</span>
+                        <span class="badge bg-light text-dark me-2">Alertes tournées</span>
+                        <span class="badge bg-light text-dark">Conseils éco</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5" data-aos="fade-up">Questions fréquentes</h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item" data-aos="fade-up">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Comment signaler un dépôt sauvage ?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Utilisez notre formulaire de signalement en indiquant la localisation précise, une description et éventuellement une photo. Notre équipe traitera votre signalement dans les 24h.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item" data-aos="fade-up" data-aos-delay="100">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Quels sont les horaires de collecte ?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Les collectes ont lieu du lundi au samedi de 7h à 17h selon les secteurs. Consultez notre programme des tournées pour plus de détails.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item" data-aos="fade-up" data-aos-delay="200">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Comment devenir partenaire PME ?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Contactez-nous via le formulaire de contact avec votre numéro RCCM et nous vous recontacterons pour un entretien.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item" data-aos="fade-up" data-aos-delay="300">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    Que faire en cas d'urgence environnementale ?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Appelez notre hotline d'urgence au <strong>+224 622 00 11 22</strong> disponible 24h/24 pour les situations critiques.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Témoignages -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5" data-aos="fade-up">Ce qu'ils disent de nous</h2>
+            <div class="row g-4">
+                <div class="col-md-4" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="testimonial-card">
+                        <p>"Depuis que j'utilise Kakoulima, ma commune est beaucoup plus propre. Le système de signalement est très efficace !"</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">Th.S</div>
+                            <div>
+                                <h6 class="mb-0">Thierno Amadou Sow</h6>
+                                <small class="text-muted">Ingenieur Informatique</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="testimonial-card">
+                        <p>"Notre PME a considérablement amélioré son organisation grâce aux outils mis à disposition. Un partenariat gagnant-gagnant."</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">OS</div>
+                            <div>
+                                <h6 class="mb-0">Ousmane Sylla</h6>
+                                <small class="text-muted">Lead Tech</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="testimonial-card">
+                        <p>"Les notifications des tournées me permettent de sortir ma poubelle au bon moment. Plus d'odeurs dans la rue !"</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">MC</div>
+                            <div>
+                                <h6 class="mb-0">Maimouna Camara</h6>
+                                <small class="text-muted">Menagere</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-5" data-aos="fade-right">
+                    <h2 class="mb-4">Contactez-nous</h2>
+                    <p class="mb-4">Une question, une suggestion ? Notre équipe est à votre écoute.</p>
+                    
+                    <div class="d-flex mb-3">
+                        <i class="bi bi-geo-alt-fill fs-4 me-3" style="color: #0a3b8c;"></i>
+                        <div>
+                            <h6>Adresse</h6>
+                            <p>Sonfonia Gare 2 de la République, Conakry - Guinee</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <i class="bi bi-telephone-fill fs-4 me-3" style="color: #0a3b8c;"></i>
+                        <div>
+                            <h6>Téléphone</h6>
+                            <p>+224 622 00 02 55</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <i class="bi bi-envelope-fill fs-4 me-3" style="color: #0a3b8c;"></i>
+                        <div>
+                            <h6>Email</h6>
+                            <p>contact@kakoulima.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <i class="bi bi-clock-fill fs-4 me-3" style="color: #0a3b8c;"></i>
+                        <div>
+                            <h6>Horaires</h6>
+                            <p>Lun-Ven: 8h-18h | Sam: 9h-13h</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-7" data-aos="fade-left">
+                    <form id="contactForm" class="bg-white p-4 rounded-3 shadow-sm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" placeholder="Votre nom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="email" class="form-control" placeholder="Votre email" required>
+                            </div>
+                            <div class="col-12">
+                                <input type="text" class="form-control" placeholder="Sujet" required>
+                            </div>
+                            <div class="col-12">
+                                <textarea class="form-control" rows="5" placeholder="Votre message" required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn signal-btn" style="width: auto;">
+                                    <i class="bi bi-send"></i> Envoyer le message
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h3 class="text-white mb-3">Kakoulima</h3>
+                    <p>Révolutionnons ensemble la gestion des déchets pour une ville plus propre et plus durable.</p>
+                    <div>
+                        <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="social-icon"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-white mb-3">Liens rapides</h5>
+                    <a href="#" class="footer-link">Accueil</a>
+                    <a href="#" class="footer-link">Signaler</a>
+                    <a href="#" class="footer-link">PME partenaires</a>
+                    <a href="#" class="footer-link">Communes</a>
+                </div>
+                
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-white mb-3">Informations</h5>
+                    <a href="#" class="footer-link">FAQ</a>
+                    <a href="#" class="footer-link">Mentions légales</a>
+                    <a href="#" class="footer-link">Politique de confidentialité</a>
+                    <a href="#" class="footer-link">Conditions d'utilisation</a>
+                </div>
+                
+                <div class="col-lg-4 mb-4">
+                    <h5 class="text-white mb-3">Newsletter</h5>
+                    <p>Restez informé de nos actualités</p>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="Votre email">
+                        <button class="btn btn-warning" type="button" style="background: #FF9800;">S'abonner</button>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4 bg-light">
+            
+            <div class="text-center">
+                <p class="mb-0">&copy; 2026 Kakoulima. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Signal Modal -->
+    <div class="modal fade" id="signalModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Signaler un point noir</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="modalSignalForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Votre nom" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Votre email" required>
+                        </div>
+                        <div class="mb-3">
+                            <select class="form-select" required>
+                                <option value="">Sélectionnez un secteur</option>
+                                <option value="ZTT">ZTT</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Localisation précise" required>
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Description" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Photo (optionnel)</label>
+                            <input type="file" class="form-control" accept="image/*">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" form="modalSignalForm" class="btn signal-btn">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Connexion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="login-tabs">
+                        <img src="./img/logokakoulima.jpeg" style="width: 100%;">
+                    </div>
+                    
+                    <div id="loginForm" class="login-form active">
+                        <form id="loginFormSubmit">
+                            <div class="mb-3">
+                                <select name="pays" id="pays_id" class="form-control">
+                                    <option value="" selected>Selectionnez votre pays</option>
+                                    <option value="guinee" selected>Guinee</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <input type="tel" id="phone-login" class="form-control">
+                                <small class="text-muted">Format international accepté</small>
+                                <input type="hidden" id="full-phone-login" name="full_phone">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mot de passe</label>
+                                <div class="password-input-container">
+                                    <i class="bi bi-key password-icon"></i>
+                                    <input type="password" class="form-control password-field" placeholder="Entrez votre mot de passe" required>
+                                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility(this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe">
+                                <label class="form-check-label" for="rememberMe">Se souvenir de moi</label>
+                            </div>
+                            <button type="submit" class="btn signal-btn">Se connecter</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
+    <script src="script.js"></script>
+  
+    <script>
+    const phoneLoginInput = document.querySelector("#phone-login");
+    if (phoneLoginInput) {
+        const itiPhoneLogin = window.intlTelInput(phoneLoginInput, {
+            initialCountry: "GN", // Guinée par défaut
+            preferredCountries: ["GN", "CI", "SN", "CM", "BJ", "ML", "BF"],
+            separateDialCode: true,
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+            nationalMode: false,
+            autoPlaceholder: "polite",
+            formatOnDisplay: true,
+            hiddenInput: "full_phone_login",
+        });
+        
+        function validatePhoneNumber(input, itiInstance) {
+            const fullNumber = itiInstance.getNumber();
+            const isValid = itiInstance.isValidNumber();
+            const countryData = itiInstance.getSelectedCountryData();
+            
+            let messageEl = input.parentNode.querySelector('.phone-validation-message');
+            if (!messageEl) {
+                messageEl = document.createElement('small');
+                messageEl.className = 'phone-validation-message';
+                input.parentNode.appendChild(messageEl);
+            }
+            
+            const numberWithoutDialCode = input.value.replace(/\D/g, '');
+            const dialCode = countryData.dialCode;
+            
+            console.log('Vérification du numéro:', {
+                fullNumber: fullNumber,
+                isValid: isValid,
+                countryCode: countryData.iso2,
+                dialCode: '+' + dialCode,
+                inputValue: input.value,
+                numberWithoutDialCode: numberWithoutDialCode
+            });
+            
+            const hasDialCode = input.value.includes('+' + dialCode) || 
+                               input.value.includes(dialCode) || 
+                               fullNumber.includes('+' + dialCode);
+                               console.log('Le numéro contient-il l\'indicatif ? ', hasDialCode);   
+            
+            if (isValid) {
+                messageEl.className = 'phone-validation-message phone-valid';
+                messageEl.textContent = '✓ Numéro valide';
+                input.style.borderColor = '#28a745';
+                
+                let hiddenInput = document.querySelector('#full-phone-login');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'full-phone-login';
+                    hiddenInput.name = 'full_phone_login';
+                    input.parentNode.appendChild(hiddenInput);
+                }
+                hiddenInput.value = fullNumber;
+                
+            } else {
+                if (numberWithoutDialCode.length > 0) {
+                    const minLength = 7;
+                    const maxLength = 15;
+                    
+                    if (numberWithoutDialCode.length >= minLength && 
+                        numberWithoutDialCode.length <= maxLength) {
+                        
+                        try {
+                            const formattedNumber = '+' + dialCode + numberWithoutDialCode;
+                            
+                            itiInstance.setNumber(formattedNumber);
+                            
+                            setTimeout(() => {
+                                if (itiInstance.isValidNumber()) {
+                                    messageEl.className = 'phone-validation-message phone-valid';
+                                    messageEl.textContent = '✓ Numéro formaté automatiquement';
+                                    input.style.borderColor = '#28a745';
+                                    input.value = itiInstance.getNumber();
+                                } else {
+                                    messageEl.className = 'phone-validation-message phone-invalid';
+                                    messageEl.textContent = '✗ Format incorrect. Utilisez le format: +' + dialCode + ' ' + numberWithoutDialCode;
+                                    input.style.borderColor = '#dc3545';
+                                }
+                            }, 100);
+                            
+                        } catch (e) {
+                            messageEl.className = 'phone-validation-message phone-invalid';
+                            messageEl.textContent = '✗ Numéro invalide pour ce pays';
+                            input.style.borderColor = '#dc3545';
+                        }
+                    } else {
+                        messageEl.className = 'phone-validation-message phone-invalid';
+                        messageEl.textContent = '✗ Le numéro doit contenir entre 7 et 15 chiffres';
+                        input.style.borderColor = '#dc3545';
+                    }
+                } else {
+                    messageEl.className = 'phone-validation-message phone-invalid';
+                    messageEl.textContent = '✗ Veuillez entrer un numéro de téléphone';
+                    input.style.borderColor = '#dc3545';
+                }
+            }
+        }
+        
+        phoneLoginInput.addEventListener('blur', function() {
+            validatePhoneNumber(this, itiPhoneLogin);
+        });
+        
+        let typingTimer;
+        phoneLoginInput.addEventListener('input', function() {
+            clearTimeout(typingTimer);
+            const input = this;
+            const iti = itiPhoneLogin;
+            
+            typingTimer = setTimeout(function() {
+                validatePhoneNumber(input, iti);
+            }, 500); 
+        });
+        
+        phoneLoginInput.addEventListener('countrychange', function() {
+            validatePhoneNumber(this, itiPhoneLogin);
+        });
+        
+        
+        if (phoneLoginInput.value) {
+            setTimeout(() => {
+                validatePhoneNumber(phoneLoginInput, itiPhoneLogin);
+            }, 500);
+        }
+        
+        const loginForm = document.getElementById('loginFormSubmit');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                const isValid = itiPhoneLogin.isValidNumber();
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Veuillez entrer un numéro de téléphone valide avec l\'indicatif du pays (ex: +224 612 345 678)');
+                    
+                    phoneLoginInput.style.borderColor = '#dc3545';
+                    phoneLoginInput.style.borderWidth = '2px';
+                    phoneLoginInput.focus();
+                }
+            });
+        }
+    }
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        .phone-validation-message {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .phone-valid {
+            color: #28a745;
+        }
+        .phone-invalid {
+            color: #dc3545;
+        }
+        #phone-login {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        #phone-login.valid {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        #phone-login.invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+</body>
+</html>
